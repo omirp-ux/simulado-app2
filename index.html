@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Simulado" />
+  <meta name="theme-color" content="#080808" />
+
+  <!-- Apple icons -->
+  <link rel="apple-touch-icon" href="icons/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png" />
+
+  <title>Simulado · Concurso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root {
+      --bg: #080808;
+      --surface: #111;
+      --border: #1e1e1e;
+      --text: #e8e8e8;
+      --muted: #555;
+      --por: #E8C547;
+      --leg: #47C5E8;
+      --enf: #E84747;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+    body { padding-top: var(--safe-top); padding-bottom: var(--safe-bot); }
+
+    /* ── INSTALL BANNER ── */
+    #installBanner {
+      display: none;
+      position: fixed;
+      bottom: calc(16px + var(--safe-bot));
+      left: 16px; right: 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 16px 18px;
+      z-index: 999;
+      box-shadow: 0 8px 32px #000a;
+      animation: slideUp 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    #installBanner.show { display: flex; align-items: center; gap: 12px; }
+    .install-icon { font-size: 28px; flex-shrink: 0; }
+    .install-text { flex: 1; }
+    .install-text strong { font-size: 13px; color: #fff; display: block; margin-bottom: 3px; }
+    .install-text span { font-size: 11px; color: var(--muted); }
+    .install-btns { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-install {
+      background: var(--por); color: #000;
+      border: none; border-radius: 8px; padding: 7px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      font-family: 'IBM Plex Mono', monospace; cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-dismiss {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px;
+      font-size: 10px; font-family: 'IBM Plex Mono', monospace; cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* iOS install hint */
+    #iosBanner {
+      display: none;
+      position: fixed;
+      bottom: calc(16px + var(--safe-bot));
+      left: 16px; right: 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 16px 18px;
+      z-index: 999;
+      box-shadow: 0 8px 32px #000a;
+      animation: slideUp 0.4s cubic-bezier(.4,0,.2,1);
+    }
+    #iosBanner.show { display: block; }
+    .ios-title { font-size: 13px; color: #fff; font-weight: 700; margin-bottom: 8px; }
+    .ios-steps { font-size: 11px; color: var(--muted); line-height: 1.8; }
+    .ios-steps span { color: var(--leg); }
+    .ios-close {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 14px; font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace; cursor: pointer; margin-top: 12px;
+      width: 100%;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: 44px 20px 28px;
+      text-align: center;
+      position: relative;
+    }
+    .eyebrow {
+      font-size: 10px; letter-spacing: 0.35em;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+    }
+    .title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(30px, 9vw, 48px);
+      font-weight: 900; line-height: 1.05;
+      background: linear-gradient(160deg, #fff 20%, #666);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; letter-spacing: -0.02em;
+    }
+    .subtitle {
+      margin-top: 10px; font-size: 11px;
+      color: var(--muted); letter-spacing: 0.12em;
+    }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex; justify-content: center;
+      gap: 8px; padding: 24px 20px;
+    }
+    .stat-pill {
+      flex: 1; max-width: 115px; border-radius: 12px;
+      padding: 14px 6px; text-align: center;
+      border: 1px solid var(--border); background: var(--surface);
+      position: relative; overflow: hidden;
+    }
+    .stat-pill::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+    }
+    .stat-pill.por::before { background: var(--por); }
+    .stat-pill.leg::before { background: var(--leg); }
+    .stat-pill.enf::before { background: var(--enf); }
+    .stat-num { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-pill.por .stat-num { color: var(--por); }
+    .stat-pill.leg .stat-num { color: var(--leg); }
+    .stat-pill.enf .stat-num { color: var(--enf); }
+    .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+    .stat-sub { font-size: 8px; color: #2a2a2a; margin-top: 2px; }
+
+    /* ── BUTTON ── */
+    .btn-wrap { padding: 0 20px 28px; }
+    .btn {
+      width: 100%; background: linear-gradient(135deg, #e8c547, #b89100);
+      color: #000; border: none; padding: 18px;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; border-radius: 14px; cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace;
+      transition: transform 0.15s, opacity 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      -webkit-appearance: none;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
+    .btn:disabled { opacity: 0.6; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #0005; border-top-color: #000;
+      border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0;
+    }
+
+    /* ── RESULTS ── */
+    .results { padding: 0 14px 48px; }
+
+    .subject-block {
+      border-radius: 16px; border: 1px solid var(--border);
+      overflow: hidden; margin-bottom: 14px;
+      opacity: 0; transform: translateY(14px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .subject-block.visible { opacity: 1; transform: translateY(0); }
+
+    .subject-header {
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
+    .subject-header-left { display: flex; align-items: center; gap: 10px; }
+    .subject-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; padding: 4px 10px;
+      border-radius: 20px; color: #000;
+    }
+    .subject-meta { font-size: 11px; color: var(--muted); }
+    .chevron { color: var(--muted); font-size: 14px; transition: transform 0.25s; }
+    .chevron.open { transform: rotate(180deg); }
+
+    .subject-body {
+      padding: 0 16px; max-height: 0;
+      overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .subject-body.open { max-height: 5000px; padding-bottom: 16px; }
+
+    .q-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px; margin: 14px 0 14px;
+    }
+    .q-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .q-num { font-size: 10px; color: var(--muted); }
+    .q-topic { font-size: 12px; font-weight: 700; }
+
+    .topic-summary { border-top: 1px solid var(--border); padding-top: 14px; }
+    .topic-summary-title {
+      font-size: 9px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    }
+    .topic-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .topic-chip {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .chip-name { font-size: 10px; color: var(--muted); }
+    .chip-count {
+      font-size: 9px; font-weight: 700;
+      border-radius: 10px; padding: 1px 6px; color: #000;
+    }
+
+    .footer {
+      text-align: center; padding: 8px 20px 20px;
+      font-size: 10px; color: #2a2a2a;
+      letter-spacing: 0.15em; text-transform: uppercase;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .header  { animation: fadeSlide 0.5s ease both; }
+    .stats   { animation: fadeSlide 0.5s 0.1s ease both; }
+    .btn-wrap{ animation: fadeSlide 0.5s 0.2s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- Android install banner -->
+<div id="installBanner">
+  <div class="install-icon">📲</div>
+  <div class="install-text">
+    <strong>Instalar o app</strong>
+    <span>Use sem internet, direto da tela inicial</span>
+  </div>
+  <div class="install-btns">
+    <button class="btn-install" id="btnInstall">Instalar</button>
+    <button class="btn-dismiss" id="btnDismiss">Agora não</button>
+  </div>
+</div>
+
+<!-- iOS install banner -->
+<div id="iosBanner">
+  <div class="ios-title">📲 Instalar no iPhone</div>
+  <div class="ios-steps">
+    1. Toque em <span>Compartilhar</span> (ícone ↑ no Safari)<br>
+    2. Role e toque em <span>"Adicionar à Tela de Início"</span><br>
+    3. Toque em <span>Adicionar</span> ✓
+  </div>
+  <button class="ios-close" id="btnIosClose">Entendi</button>
+</div>
+
+<div class="header">
+  <div class="eyebrow">Gerador de Simulado</div>
+  <div class="title">Prova de<br>Concurso</div>
+  <div class="subtitle">60 questões · distribuição aleatória</div>
+</div>
+
+<div class="stats">
+  <div class="stat-pill por">
+    <div class="stat-num">10</div>
+    <div class="stat-label">Português</div>
+    <div class="stat-sub">6 tópicos</div>
+  </div>
+  <div class="stat-pill leg">
+    <div class="stat-num">15</div>
+    <div class="stat-label">Legislação</div>
+    <div class="stat-sub">6 tópicos</div>
+  </div>
+  <div class="stat-pill enf">
+    <div class="stat-num">35</div>
+    <div class="stat-label">Enfermagem</div>
+    <div class="stat-sub">22 tópicos</div>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <button class="btn" id="genBtn" onclick="generate()">
+    <span>⚄</span> Gerar Simulado
+  </button>
+</div>
+
+<div class="results" id="results"></div>
+<div class="footer" id="footer"></div>
+
+<script>
+  // ── Service Worker ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+
+  // ── Install prompt ──
+  let deferredPrompt = null;
+  const installBanner = document.getElementById('installBanner');
+  const iosBanner     = document.getElementById('iosBanner');
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+  if (isIOS && !isInStandalone) {
+    setTimeout(() => iosBanner.classList.add('show'), 2000);
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(() => installBanner.classList.add('show'), 1500);
+  });
+
+  document.getElementById('btnInstall').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBanner.classList.remove('show');
+  });
+  document.getElementById('btnDismiss').addEventListener('click', () => {
+    installBanner.classList.remove('show');
+  });
+  document.getElementById('btnIosClose').addEventListener('click', () => {
+    iosBanner.classList.remove('show');
+  });
+
+  // ── App logic ──
+  const SUBJECTS = [
+    {
+      key: 'por', label: 'Português', total: 10,
+      topics: ['POR 1','POR 2','POR 3','POR 4','POR 5','POR 6'],
+      color: '#E8C547', headerBg: '#0f0d00',
+    },
+    {
+      key: 'leg', label: 'Legislação', total: 15,
+      topics: ['LEG 1','LEG 2','LEG 3','LEG 4','LEG 5','LEG 6'],
+      color: '#47C5E8', headerBg: '#00080f',
+    },
+    {
+      key: 'enf', label: 'Assistente', total: 35,
+      topics: Array.from({length:18}, (_,i) => `ENF ${i+1}`),
+      color: '#E84747', headerBg: '#0f0000',
+    },
+  ];
+
+  function distribute(topics, total) {
+    const counts = {};
+    topics.forEach(t => counts[t] = 1);
+    let rem = total - topics.length;
+    while (rem-- > 0) counts[topics[Math.random() * topics.length | 0]]++;
+    const out = [];
+    topics.forEach(t => { for (let i = 0; i < counts[t]; i++) out.push(t); });
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.random() * (i + 1) | 0;
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  const openStates = {};
+
+  function toggle(key) {
+    openStates[key] = !openStates[key];
+    document.getElementById('body-' + key).classList.toggle('open', openStates[key]);
+    document.getElementById('chev-' + key).classList.toggle('open', openStates[key]);
+  }
+
+  function generate() {
+    const btn = document.getElementById('genBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Sorteando...';
+
+    setTimeout(() => {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+
+      SUBJECTS.forEach((s, idx) => {
+        const questions = distribute(s.topics, s.total);
+        openStates[s.key] = true;
+
+        const counts = {};
+        questions.forEach(q => counts[q] = (counts[q] || 0) + 1);
+
+        let qCards = questions.map((topic, i) =>
+          `<div class="q-card">
+            <span class="q-num">Q${String(i+1).padStart(2,'0')}</span>
+            <span class="q-topic" style="color:${s.color}">${topic}</span>
+          </div>`
+        ).join('');
+
+        let chips = s.topics.map(t =>
+          `<div class="topic-chip">
+            <span class="chip-name">${t}</span>
+            <span class="chip-count" style="background:${s.color}">${counts[t]||0}x</span>
+          </div>`
+        ).join('');
+
+        const block = document.createElement('div');
+        block.className = 'subject-block';
+        block.innerHTML = `
+          <div class="subject-header" style="background:${s.headerBg}" onclick="toggle('${s.key}')">
+            <div class="subject-header-left">
+              <span class="subject-badge" style="background:${s.color}">${s.label}</span>
+              <span class="subject-meta">${s.total} questões</span>
+            </div>
+            <span class="chevron open" id="chev-${s.key}">▾</span>
+          </div>
+          <div class="subject-body open" id="body-${s.key}">
+            <div class="q-grid">${qCards}</div>
+            <div class="topic-summary">
+              <div class="topic-summary-title">Distribuição por tópico</div>
+              <div class="topic-chips">${chips}</div>
+            </div>
+          </div>`;
+
+        container.appendChild(block);
+        setTimeout(() => block.classList.add('visible'), idx * 100);
+      });
+
+      document.getElementById('footer').innerHTML = '✦ mín. 1 questão por tópico garantido ✦';
+      btn.disabled = false;
+      btn.innerHTML = '<span>↻</span> Novo Sorteio';
+
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 600);
+  }
+</script>
+</body>
+</html>
